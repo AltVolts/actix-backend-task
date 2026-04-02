@@ -1,7 +1,7 @@
 use crate::application::BankService;
 use crate::data::InMemoryAccountRepository;
 use crate::domain::DomainError;
-use crate::presentation::dto::{AccountResponse, ApiError, CreateAccountRequest};
+use crate::presentation::dto::{AccountResponse, CreateAccountRequest};
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, Responder, ResponseError, Result, get, post, web};
 
@@ -25,24 +25,17 @@ async fn create_account(
 }
 
 impl ResponseError for DomainError {
-    fn status_code(&self) -> StatusCode {
-        match self {
+    fn error_response(&self) -> HttpResponse {
+        let status = match self {
             DomainError::AccountNotFound => StatusCode::NOT_FOUND,
             DomainError::InvalidAmount(_) => StatusCode::BAD_REQUEST,
             DomainError::AccountAlreadyExists => StatusCode::CONFLICT,
-        }
-    }
+        };
 
-    fn error_response(&self) -> HttpResponse {
-        match self {
-            DomainError::InvalidAmount(msg) => HttpResponse::BadRequest().json(ApiError::new(msg)),
-            DomainError::AccountNotFound => {
-                HttpResponse::NotFound().json(ApiError::new("account not found"))
-            }
-            DomainError::AccountAlreadyExists => {
-                HttpResponse::Conflict().json(ApiError::new("account already exists"))
-            }
-        }
+        HttpResponse::build(status).json(serde_json::json!({
+            "error": self.to_string(),
+            "status": status.as_u16(),
+        }))
     }
 }
 
