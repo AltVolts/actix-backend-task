@@ -1,6 +1,7 @@
 use crate::domain::{Account, AccountRepository, DomainError};
 use std::collections::HashMap;
 use std::sync::Arc;
+use async_trait::async_trait;
 use tokio::sync::RwLock;
 
 #[derive(Default, Clone)]
@@ -8,6 +9,7 @@ pub struct InMemoryAccountRepository {
     accounts: Arc<RwLock<HashMap<u32, Account>>>,
 }
 
+#[async_trait]
 impl AccountRepository for InMemoryAccountRepository {
     async fn create(&self, account: Account) -> Result<(), DomainError> {
         let mut accounts = self.accounts.write().await;

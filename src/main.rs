@@ -4,10 +4,9 @@ use crate::infrastructure::{Config, init_logging};
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer, web};
-use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::info;
+use crate::presentation::middleware::RequestIdMiddleware;
 
 mod application;
 mod data;
@@ -41,6 +40,7 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(600),
             )
+            .wrap(RequestIdMiddleware)
             .wrap(Logger::default())
             .app_data(web::Data::new(service.clone()))
             .app_data(cfg.clone())
